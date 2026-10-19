@@ -66,7 +66,8 @@ The same application service is used by FastAPI and Streamlit, so the demo remai
 │   ├── service.py      # uploaded-image decoding and application flow
 │   └── tools.py        # OpenCV specialist tools
 ├── frontend/
-│   └── streamlit_app.py
+│   ├── streamlit_app.py
+│   └── src/              # React + MapLibre SatQuery AI interface
 ├── tests/
 │   ├── test_api.py
 │   ├── test_image_tools.py
@@ -248,4 +249,21 @@ For a clean Linux rebuild:
 4. Run `make test`.
 5. Run `make api` or `make frontend`, or build the Docker image.
 
-No credentials, model downloads, satellite catalog, or external image service are required for the included demo and tests.
+No credentials, model downloads, satellite catalog, or external image service are required for the included Python demo and tests. The React map uses Nominatim and a public MapLibre demo style when those browser network features are available, and shows a recoverable offline state when they are not.
+
+## React SatQuery AI frontend
+
+The interactive MapLibre interface lives in `frontend/` alongside the existing Streamlit demo. It includes the globe-to-Mercator transition, Nominatim location search, analysis prompt context, land-cover metrics, and the Agent War Room modal.
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+Open `http://localhost:5173`. Run the production checks with:
+
+```bash
+npm run typecheck
+npm run build
+```
