@@ -23,6 +23,6 @@ COPY frontend ./frontend
 COPY tests ./tests
 COPY pyproject.toml Makefile .python-version ./
 
-# The default container behavior is the offline test suite. Override the
-# command with uvicorn or streamlit when running an application service.
-ENTRYPOINT ["python", "-m", "pytest", "-q"]
+# The default container behavior is the offline test suite. A CMD keeps it
+# easy to override with uvicorn or streamlit when running an application.
+CMD ["python", "-m", "pytest", "-q"]
