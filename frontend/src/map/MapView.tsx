@@ -19,7 +19,7 @@ import type {
   Measurement,
 } from "../types";
 
-const DEFAULT_MAP_STYLE = "https://demotiles.maplibre.org/style.json";
+const DEFAULT_MAP_STYLE = "https://tiles.openfreemap.org/styles/bright";
 const INITIAL_CENTER: [number, number] = [73.8567, 18.5204];
 const INITIAL_ZOOM = 2;
 const PROJECTION_THRESHOLD = 7;
@@ -122,6 +122,7 @@ export default function MapView({
 }) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
+  const mapReadyRef = useRef(false);
   const projectionRef = useRef<ProjectionName>("globe");
   const searchAbortRef = useRef<AbortController | null>(null);
   const timerRefs = useRef<number[]>([]);
@@ -166,8 +167,27 @@ export default function MapView({
         setMapError(error instanceof Error ? error.message : "Projection transition failed.");
       }
     };
+    const handleMapLoad = () => {
+      mapReadyRef.current = true;
+      setMapReady(true);
+      setMapError(null);
+    };
+    const handleMapIdle = () => {
+      // A style can finish loading before all vector/raster tiles arrive. The
+      // idle event is the safe point at which the visible basemap is ready.
+      if (map?.isStyleLoaded()) setMapError(null);
+    };
     const handleMapError = (event: maplibregl.ErrorEvent) => {
       const message = event.error?.message || "The basemap could not be loaded.";
+
+      // Tile 404s/timeouts can be emitted while MapLibre is still assembling
+      // the style. They should not cover the working UI with a fatal banner;
+      // the next successful tile/idle event clears any transient warning.
+      const isTileError = /tile|source|vector|raster|glyph|sprite/i.test(message);
+      if (isTileError && (mapReadyRef.current || map?.isStyleLoaded())) {
+        setMapError(null);
+        return;
+      }
       setMapError(message);
     };
 
@@ -189,7 +209,8 @@ export default function MapView({
       map.addControl(new NavigationControl({ showCompass: true }), "bottom-right");
       map.on("zoom", handleZoom);
       map.on("error", handleMapError);
-      map.once("load", () => setMapReady(true));
+      map.once("load", handleMapLoad);
+      map.on("idle", handleMapIdle);
     } catch (error) {
       setMapError(error instanceof Error ? error.message : "Unable to initialize the map.");
     }
@@ -198,8 +219,10 @@ export default function MapView({
       if (map) {
         map.off("zoom", handleZoom);
         map.off("error", handleMapError);
+        map.off("idle", handleMapIdle);
         map.remove();
       }
+      mapReadyRef.current = false;
       mapRef.current = null;
       setMapReady(false);
     };
