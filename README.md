@@ -172,6 +172,15 @@ Supported examples:
 - `Highlight water bodies` → upload one image.
 - `How much vegetation is visible?` → upload one image.
 
+### Included demo images
+
+Ready-to-upload deterministic fixtures are in `demo/images/`:
+
+- `change_before.png` and `change_after.png` for bi-temporal comparison;
+- `feature_scene.png` for water and vegetation extraction.
+
+See `demo/README.md` for expected queries and the regeneration command.
+
 ## Docker
 
 The multi-stage Dockerfile installs the exact requirements into a builder virtual environment, copies that environment into a slim runtime image, and uses the offline test suite as its default entrypoint.
