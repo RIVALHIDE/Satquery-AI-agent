@@ -1,0 +1,12 @@
+.venv/
+.deps/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.streamlit/
+.env
+dist/
+build/
+*.egg-info/
+coverage.xml
+.coverage
