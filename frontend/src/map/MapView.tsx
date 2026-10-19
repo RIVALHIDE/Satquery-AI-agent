@@ -35,11 +35,11 @@ interface NominatimResult {
 }
 
 const measurements: Measurement[] = [
-  { label: "Vegetation", value: "41.8%", color: "bg-emerald-400", percentage: 41.8 },
-  { label: "Water", value: "18.6%", color: "bg-cyan-400", percentage: 18.6 },
-  { label: "Built-up", value: "24.1%", color: "bg-amber-400", percentage: 24.1 },
-  { label: "Bare Soil", value: "12.3%", color: "bg-orange-300", percentage: 12.3 },
-  { label: "Cloud", value: "3.2%", color: "bg-slate-300", percentage: 3.2 },
+  { label: "Vegetation", value: "41.8%", color: "bg-emerald-500", percentage: 41.8 },
+  { label: "Water", value: "18.6%", color: "bg-cyan-600", percentage: 18.6 },
+  { label: "Built-up", value: "24.1%", color: "bg-amber-500", percentage: 24.1 },
+  { label: "Bare Soil", value: "12.3%", color: "bg-orange-500", percentage: 12.3 },
+  { label: "Cloud", value: "3.2%", color: "bg-slate-500", percentage: 3.2 },
 ];
 
 const stepTemplates: AnalysisStep[] = [
@@ -366,11 +366,11 @@ export default function MapView({
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,transparent_20%,rgba(2,6,23,0.2)_100%)]" />
 
       <header className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-start justify-between p-5">
-        <div className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 shadow-2xl backdrop-blur-xl">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-cyan-400/15 text-xl text-cyan-300">✦</div>
+        <div className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-slate-200/90 bg-white/95 px-4 py-3 text-slate-900 shadow-2xl backdrop-blur-md">
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-blue-50 text-xl text-blue-600">✦</div>
           <div>
-            <div className="text-sm font-semibold tracking-wide text-white">SatQuery AI</div>
-            <div className="mt-0.5 flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-slate-400">
+            <div className="text-sm font-bold tracking-wide text-slate-900">SatQuery AI</div>
+            <div className="mt-0.5 flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">
               <StatusDot active={mapReady} />
               {mapReady ? "Live earth intelligence" : "Initializing map"}
             </div>
@@ -380,9 +380,9 @@ export default function MapView({
         <button
           type="button"
           onClick={() => setWarRoomOpen(true)}
-          className="pointer-events-auto flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-slate-950/80 px-4 py-3 text-xs font-medium text-slate-200 shadow-2xl backdrop-blur-xl transition hover:border-cyan-300/50 hover:text-cyan-200"
+          className="pointer-events-auto flex items-center gap-2 rounded-xl border border-slate-200 bg-white/95 px-4 py-3 text-xs font-semibold text-slate-900 shadow-lg backdrop-blur-md transition hover:border-blue-300 hover:bg-blue-50"
         >
-          <span className="text-cyan-300">◈</span>
+          <span className="text-blue-600">◈</span>
           War Room Logs
         </button>
       </header>
@@ -391,7 +391,7 @@ export default function MapView({
         onSubmit={searchLocations}
         className="absolute left-1/2 top-5 z-30 w-[min(440px,calc(100%-340px))] -translate-x-1/2"
       >
-        <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-slate-950/85 px-3 py-2 shadow-2xl backdrop-blur-xl">
+        <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/95 px-3 py-2 text-slate-900 shadow-lg backdrop-blur-md">
           <span className="pl-1 text-slate-500" aria-hidden="true">⌕</span>
           <input
             value={searchValue}
@@ -400,65 +400,65 @@ export default function MapView({
               setSearchError(null);
             }}
             placeholder="Search a place or enter lat, lon"
-            className="min-w-0 flex-1 bg-transparent px-1 py-1 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+            className="min-w-0 flex-1 bg-transparent px-1 py-1 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400"
             aria-label="Search a place or coordinates"
           />
-          {searching && <span className="text-[10px] uppercase tracking-wider text-cyan-300">Searching</span>}
+          {searching && <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500">Searching</span>}
           <button
             type="submit"
-            className="rounded-xl bg-cyan-300 px-3 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-200"
+            className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
           >
             Go
           </button>
         </div>
         {(suggestions.length > 0 || searchError) && (
-          <div className="mt-2 overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 shadow-2xl backdrop-blur-xl">
+          <div className="mt-2 overflow-hidden rounded-2xl border border-slate-200/90 bg-white/95 text-slate-900 shadow-2xl backdrop-blur-md">
             {suggestions.map((result) => (
-              <div key={result.place_id} className="flex items-center gap-3 border-b border-white/5 px-3 py-3 last:border-0">
+              <div key={result.place_id} className="flex items-center gap-3 border-b border-slate-200 px-3 py-3 last:border-0">
                 <button
                   type="button"
                   onClick={() => selectSuggestion(result)}
-                  className="min-w-0 flex-1 text-left transition hover:text-cyan-200"
+                  className="min-w-0 flex-1 text-left transition hover:text-blue-700"
                 >
-                  <div className="truncate text-xs font-medium text-slate-100">{shortPlaceName(result.display_name)}</div>
+                  <div className="truncate text-xs font-bold text-slate-900">{shortPlaceName(result.display_name)}</div>
                   <div className="mt-1 truncate text-[10px] text-slate-500">{result.display_name}</div>
                 </button>
                 <button
                   type="button"
                   onClick={() => selectSuggestion(result)}
-                  className="shrink-0 rounded-lg border border-cyan-300/20 px-2 py-1.5 text-[10px] font-medium text-cyan-300 hover:bg-cyan-300/10"
+                  className="shrink-0 rounded-lg border border-blue-200 bg-blue-50 px-2 py-1.5 text-[10px] font-semibold text-blue-700 hover:bg-blue-100"
                 >
                   Use as area
                 </button>
               </div>
             ))}
-            {searchError && <div className="px-4 py-3 text-xs text-rose-300">{searchError}</div>}
+            {searchError && <div className="px-4 py-3 text-xs font-medium text-rose-600">{searchError}</div>}
           </div>
         )}
       </form>
 
-      <div className="absolute bottom-5 left-5 z-10 hidden rounded-xl border border-white/10 bg-slate-950/75 px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-slate-400 backdrop-blur-xl md:block">
-        <span className="mr-2 text-cyan-300">◉</span>
+      <div className="absolute bottom-5 left-5 z-10 hidden rounded-xl border border-slate-200/90 bg-white/95 px-3 py-2 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-500 shadow-lg backdrop-blur-md md:block">
+        <span className="mr-2 text-blue-600">◉</span>
         {projection === "globe" ? "3D globe" : "2D mercator"} · zoom threshold 7
       </div>
 
       {mapError && (
-        <div className="absolute left-1/2 top-28 z-20 -translate-x-1/2 rounded-xl border border-amber-300/20 bg-slate-950/90 px-4 py-3 text-center text-xs text-amber-200 shadow-2xl backdrop-blur-xl">
-          <div className="font-medium">Basemap unavailable</div>
-          <div className="mt-1 max-w-xs text-[10px] text-slate-400">Analysis controls remain available. Check the map connection to restore tiles.</div>
+        <div className="absolute left-1/2 top-28 z-20 -translate-x-1/2 rounded-xl border border-slate-200/90 bg-white/95 px-4 py-3 text-center text-xs text-slate-900 shadow-2xl backdrop-blur-md">
+          <div className="font-bold">Basemap unavailable</div>
+          <div className="mt-1 max-w-xs text-[10px] text-slate-500">Analysis controls remain available. Check the map connection to restore tiles.</div>
         </div>
       )}
 
-      <aside className="absolute bottom-28 right-5 top-24 z-20 flex w-[min(330px,calc(100%-40px))] flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-950/88 shadow-2xl backdrop-blur-xl lg:w-[342px]">
-        <div className="border-b border-white/8 px-5 py-4">
+      <aside className="absolute bottom-28 right-5 top-24 z-20 flex w-[min(330px,calc(100%-40px))] flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white/95 text-slate-900 shadow-2xl backdrop-blur-md lg:w-[342px]">
+        <div className="border-b border-slate-200 px-5 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-cyan-300">Scene intelligence</div>
-              <h2 className="mt-1 text-base font-semibold text-white">Land cover analysis</h2>
+              <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-blue-600">Scene intelligence</div>
+              <h2 className="mt-1 text-base font-bold text-slate-900">Land cover analysis</h2>
             </div>
-            <span className="rounded-full bg-emerald-400/10 px-2 py-1 text-[10px] font-medium text-emerald-300">{isAnalyzing ? "Running" : "Ready"}</span>
+            <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-600">{isAnalyzing ? "Running" : "Ready"}</span>
           </div>
-          <div className="mt-4 flex items-center justify-between text-[11px] text-slate-400">
+          <div className="mt-4 flex items-center justify-between text-[11px] font-medium text-slate-700">
             <span>{areaContext?.label || "Pune, Maharashtra"}</span>
             <span className="text-slate-500">Sentinel-2 L2A</span>
           </div>
@@ -467,17 +467,17 @@ export default function MapView({
         <div className="flex-1 overflow-y-auto px-5 py-4">
           <div className="mb-5">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-xs font-semibold text-slate-200">Measurement breakdown</h3>
+              <h3 className="text-xs font-bold text-slate-900">Measurement breakdown</h3>
               <span className="text-[10px] text-slate-500">Latest scene</span>
             </div>
             <div className="space-y-3">
               {measurements.map((measurement) => (
                 <div key={measurement.label}>
                   <div className="mb-1.5 flex items-center justify-between text-[11px]">
-                    <span className="flex items-center gap-2 text-slate-400"><span className={`h-2 w-2 rounded-full ${measurement.color}`} />{measurement.label}</span>
-                    <span className="font-mono text-slate-200">{measurement.value}</span>
+                    <span className="flex items-center gap-2 font-medium text-slate-700"><span className={`h-2 w-2 rounded-full ${measurement.color}`} />{measurement.label}</span>
+                    <span className="font-mono font-semibold text-slate-900">{measurement.value}</span>
                   </div>
-                  <div className="h-1 overflow-hidden rounded-full bg-white/8">
+                  <div className="h-1 overflow-hidden rounded-full bg-slate-200">
                     <div className={`h-full rounded-full ${measurement.color}`} style={{ width: `${measurement.percentage}%` }} />
                   </div>
                 </div>
@@ -485,23 +485,23 @@ export default function MapView({
             </div>
           </div>
 
-          <div className="border-t border-white/8 pt-5">
+          <div className="border-t border-slate-200 pt-5">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-xs font-semibold text-slate-200">Agent execution</h3>
+              <h3 className="text-xs font-bold text-slate-900">Agent execution</h3>
               <span className="font-mono text-[10px] text-slate-500">{formatTimestamp()}</span>
             </div>
             <div className="space-y-0">
               {analysisSteps.map((step, index) => (
                 <div key={step.id} className="relative flex gap-3 pb-4 last:pb-0">
-                  {index < analysisSteps.length - 1 && <span className="absolute left-[9px] top-5 h-full w-px bg-white/10" />}
-                  <div className={`relative z-10 grid h-5 w-5 shrink-0 place-items-center rounded-full border text-[10px] ${step.status === "done" ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : step.status === "running" ? "border-cyan-300/30 bg-cyan-300/10 text-cyan-300" : "border-white/10 bg-white/5 text-slate-600"}`}>
+                  {index < analysisSteps.length - 1 && <span className="absolute left-[9px] top-5 h-full w-px bg-slate-200" />}
+                  <div className={`relative z-10 grid h-5 w-5 shrink-0 place-items-center rounded-full border text-[10px] ${step.status === "done" ? "border-emerald-500 bg-emerald-500 text-white" : step.status === "running" ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300 bg-slate-100 text-slate-500"}`}>
                     {step.status === "done" ? "✓" : step.status === "running" ? "•" : "·"}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className={`text-[11px] ${step.status === "pending" ? "text-slate-600" : "text-slate-200"}`}>{step.label}</div>
+                    <div className={`text-[11px] font-medium ${step.status === "pending" ? "text-slate-400" : "text-slate-700"}`}>{step.label}</div>
                     <div className="mt-0.5 truncate text-[10px] text-slate-500">{step.detail}</div>
                   </div>
-                  <div className={`font-mono text-[10px] ${step.status === "pending" ? "text-slate-700" : "text-slate-500"}`}>{step.milliseconds} ms</div>
+                  <div className={`font-mono text-[10px] ${step.status === "pending" ? "text-slate-400" : "text-slate-500"}`}>{step.milliseconds} ms</div>
                 </div>
               ))}
             </div>
@@ -511,39 +511,39 @@ export default function MapView({
 
       <div className="absolute bottom-5 left-1/2 z-30 w-[min(690px,calc(100%-40px))] -translate-x-1/2">
         {datesOpen && (
-          <div className="mb-2 ml-auto flex w-fit items-center gap-2 rounded-xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl backdrop-blur-xl">
-            <label className="text-[10px] uppercase tracking-wider text-slate-500">From <input type="date" value={dateRange.from} onChange={(event) => setDateRange((current) => ({ ...current, from: event.target.value }))} className="ml-1 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-xs text-slate-200" /></label>
+          <div className="mb-2 ml-auto flex w-fit items-center gap-2 rounded-xl border border-slate-200/90 bg-white/95 p-2 text-slate-900 shadow-2xl backdrop-blur-md">
+            <label className="text-[10px] font-medium uppercase tracking-wider text-slate-500">From <input type="date" value={dateRange.from} onChange={(event) => setDateRange((current) => ({ ...current, from: event.target.value }))} className="ml-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-900" /></label>
             <span className="text-slate-600">→</span>
-            <label className="text-[10px] uppercase tracking-wider text-slate-500">To <input type="date" value={dateRange.to} onChange={(event) => setDateRange((current) => ({ ...current, to: event.target.value }))} className="ml-1 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-xs text-slate-200" /></label>
+            <label className="text-[10px] font-medium uppercase tracking-wider text-slate-500">To <input type="date" value={dateRange.to} onChange={(event) => setDateRange((current) => ({ ...current, to: event.target.value }))} className="ml-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-900" /></label>
           </div>
         )}
-        <form onSubmit={submitPrompt} className="rounded-2xl border border-white/10 bg-slate-950/92 p-2 shadow-2xl backdrop-blur-xl">
+        <form onSubmit={submitPrompt} className="rounded-2xl border-2 border-blue-500/80 bg-white/95 p-2 text-slate-900 shadow-2xl backdrop-blur-lg">
           <div className="flex items-center gap-2">
             <div className="relative">
-              <button type="button" onClick={() => setAttachmentsOpen((open) => !open)} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/5 text-xl text-slate-300 transition hover:bg-cyan-300/10 hover:text-cyan-200" aria-label="Add analysis context">+</button>
+              <button type="button" onClick={() => setAttachmentsOpen((open) => !open)} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-xl text-blue-700 transition hover:bg-blue-100" aria-label="Add analysis context">+</button>
               {attachmentsOpen && (
-                <div className="absolute bottom-12 left-0 w-52 overflow-hidden rounded-xl border border-white/10 bg-slate-950 shadow-2xl">
-                  <button type="button" onClick={() => fileInputRef.current?.click()} className="block w-full px-3 py-2.5 text-left text-xs text-slate-300 hover:bg-white/5">↥ Upload GeoTIFF / PNG</button>
-                  <button type="button" onClick={useSelectedArea} className="block w-full px-3 py-2.5 text-left text-xs text-slate-300 hover:bg-white/5">⌖ Select area</button>
-                  <button type="button" onClick={() => { setDatesOpen((open) => !open); setAttachmentsOpen(false); }} className="block w-full px-3 py-2.5 text-left text-xs text-slate-300 hover:bg-white/5">◷ Choose dates</button>
+                <div className="absolute bottom-12 left-0 w-52 overflow-hidden rounded-xl border border-slate-200/90 bg-white/95 text-slate-900 shadow-2xl backdrop-blur-md">
+                  <button type="button" onClick={() => fileInputRef.current?.click()} className="block w-full px-3 py-2.5 text-left text-xs font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700">↥ Upload GeoTIFF / PNG</button>
+                  <button type="button" onClick={useSelectedArea} className="block w-full px-3 py-2.5 text-left text-xs font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700">⌖ Select area</button>
+                  <button type="button" onClick={() => { setDatesOpen((open) => !open); setAttachmentsOpen(false); }} className="block w-full px-3 py-2.5 text-left text-xs font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700">◷ Choose dates</button>
                 </div>
               )}
               <input ref={fileInputRef} type="file" accept=".tif,.tiff,.png,image/png" onChange={handleFileChange} className="hidden" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-1.5">
-                {areaContext && <span className="rounded-md bg-cyan-300/10 px-2 py-1 text-[10px] text-cyan-200">⌖ {areaContext.label} · {areaContext.area}</span>}
-                {dateRange.from && dateRange.to && <span className="rounded-md bg-white/5 px-2 py-1 font-mono text-[10px] text-slate-400">◷ {dateRange.from} → {dateRange.to}</span>}
-                {attachmentName && <span className="max-w-40 truncate rounded-md bg-amber-300/10 px-2 py-1 text-[10px] text-amber-200">↥ {attachmentName}</span>}
+                {areaContext && <span className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-[10px] font-semibold text-blue-700">⌖ {areaContext.label} · {areaContext.area}</span>}
+                {dateRange.from && dateRange.to && <span className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1 font-mono text-[10px] font-semibold text-blue-700">◷ {dateRange.from} → {dateRange.to}</span>}
+                {attachmentName && <span className="max-w-40 truncate rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-[10px] font-semibold text-blue-700">↥ {attachmentName}</span>}
               </div>
-              <input value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Ask SatQuery AI about this scene..." className="mt-1 w-full bg-transparent px-1 py-1 text-sm text-slate-100 outline-none placeholder:text-slate-500" aria-label="Ask SatQuery AI" />
+              <input value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Ask SatQuery AI about this scene..." className="mt-1 w-full bg-transparent px-1 py-1 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400" aria-label="Ask SatQuery AI" />
             </div>
-            <button type="submit" disabled={isAnalyzing} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-cyan-300 text-lg font-bold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-wait disabled:opacity-50" aria-label="Run analysis">{isAnalyzing ? "…" : "↑"}</button>
+            <button type="submit" disabled={isAnalyzing} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-600 text-lg font-bold text-white transition hover:bg-blue-700 disabled:cursor-wait disabled:opacity-50" aria-label="Run analysis">{isAnalyzing ? "…" : "↑"}</button>
           </div>
         </form>
         <div className="mt-2 flex flex-wrap justify-center gap-2">
           {["What land cover is here?", "Describe this scene", "Highlight built-up area"].map((suggestion) => (
-            <button key={suggestion} type="button" onClick={() => setPrompt(suggestion)} className="rounded-full border border-white/10 bg-slate-950/80 px-3 py-1.5 text-[10px] text-slate-400 shadow-lg backdrop-blur-xl transition hover:border-cyan-300/30 hover:text-cyan-200">{suggestion}</button>
+            <button key={suggestion} type="button" onClick={() => setPrompt(suggestion)} className="rounded-full bg-slate-900 px-3 py-1.5 text-[10px] font-semibold text-white shadow-md transition hover:bg-slate-800">{suggestion}</button>
           ))}
         </div>
       </div>
