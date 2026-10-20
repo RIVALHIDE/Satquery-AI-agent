@@ -2,10 +2,10 @@
 
 https://youtu.be/7omqHjBwN2M?feature=shared
 
-Agentic satellite vision-language query assistant for **SIH26167 / Frontier Buildathon**.
+Agentic satellite vision-language query assistant for ** Frontier Buildathon**.
 https://youtu.be/7omqHjBwN2M?feature=shared
 
-Agentic satellite vision-language query assistant for **SIH26167 / Frontier Buildathon**.
+Agentic satellite vision-language query assistant for ** Frontier Buildathon**.
 
 Draw a bounding box on the interactive globe, ask a natural-language question, and the agent fetches real Sentinel-2 optical or Sentinel-1 SAR scenes from Microsoft Planetary Computer, runs deterministic computer-vision tools locally, and returns a structured executive report with a monthly timeline, land-cover metrics, and change detection.
 
