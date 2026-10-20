@@ -2,260 +2,174 @@
 
 https://youtu.be/7omqHjBwN2M?feature=shared
 
-Offline-first, agentic satellite vision-language query assistant for **SIH26167 / Frontier Buildathon**.
+Agentic satellite vision-language query assistant for **SIH26167 / Frontier Buildathon**.
 
-The project demonstrates a small local swarm of specialist agents/tools:
+Draw a bounding box on the interactive globe, ask a natural-language question, and the agent fetches real Sentinel-2 optical or Sentinel-1 SAR scenes from Microsoft Planetary Computer, runs deterministic computer-vision tools locally, and returns a structured executive report with a monthly timeline, land-cover metrics, and change detection.
 
-1. **Orchestrator Router Agent** — classifies natural-language intent without an external LLM and selects one specialist.
-2. **Bi-Temporal Change Detection Tool** — compares two same-sized images with OpenCV matrix differencing and reports changed regions.
-3. **Feature Extraction Tool** — segments water and vegetation with OpenCV HSV color thresholds and reports image coverage.
+---
 
-The same application service is used by FastAPI and Streamlit, so the demo remains usable with no network connection or cloud credentials.
+## What the project does
+
+1. **User draws a bbox on the MapLibre globe** and types a question such as *"What changed here over the last year?"*
+2. The **React frontend** sends the bbox, date range, and query to the FastAPI backend.
+3. The **Acquisition Pipeline** searches the Planetary Computer STAC catalog, picks the lowest-cloud-cover scene per calendar month, and reads raster bands with Rasterio. When cloud cover exceeds 60 % it automatically falls back to Sentinel-1 RTC SAR data.
+4. The **Analysis Controller** runs a deterministic DAG:
+   - geodesic area calculation (Shapely + pyproj)
+   - NDVI and NDWI indices (NIR / red / green bands)
+   - SAR backscatter metrics (VV / VH polarisation)
+   - SSIM + Otsu change detection between consecutive months
+5. Every step is recorded as a **TraceStep** and streamed to the **Agent War Room** modal.
+6. The **AnalysisReport** component renders the executive summary, monthly thumbnail timeline, land-cover bars, key findings, and export buttons (PDF, GeoJSON, JSON, text).
+
+---
 
 ## Architecture
 
-```text
-                       natural-language query
-                                  |
-                                  v
-                    +---------------------------+
-                    | Orchestrator Router Agent |
-                    | deterministic intent      |
-                    | classifier (offline)      |
-                    +-------------+-------------+
-                                  |
-                    +-------------+-------------+
-                    |                           |
-                    v                           v
-       +---------------------------+  +--------------------------+
-       | Bi-Temporal Change Tool   |  | Feature Extraction Tool  |
-       | cv2.absdiff + contours    |  | HSV masks + coverage     |
-       +-------------+-------------+  +------------+-------------+
-                     |                             |
-                     +-------------+---------------+
-                                   v
-                         structured AgentResponse
-                         (summary, metrics, boxes)
+```
+User draws bbox + types query
+           │
+           ▼
+    React MapView (MapLibre GL)
+    bbox draw · Nominatim search
+    date range picker · prompt bar
+           │  POST /imagery/analyze or /analyze
+           ▼
+    FastAPI backend  (backend/api.py)
+    CORS · /health · /analyze · /imagery/analyze
+           │
+           ▼
+    AnalysisController  (backend/agent/controller.py)
+    Planner DAG → Validator → Tool Registry → Summarizer
+           │
+     ┌─────┴──────┐
+     ▼            ▼
+Sentinel-2    Sentinel-1 RTC
+optical       SAR fallback
+(Planetary Computer STAC)
+     │            │
+     └─────┬──────┘
+           ▼
+    Tools (tools/)
+    ├── geo.area      (Shapely + pyproj geodesic area)
+    ├── geo.indices   (NDVI, NDWI — numpy, no LLM)
+    └── change.detect (SSIM + Otsu — scikit-image + OpenCV)
+           │
+           ▼
+    V2AnalysisResponse / AnalysisResult
+    status · confidence · metrics · months[]
+    trace[] · thumbnail_b64 · analysis_logs[]
+           │
+           ▼
+    React AnalysisReport + AgentWarRoomModal
 ```
 
-```text
-                +----------------------+
-                | Streamlit frontend   |
-                +----------+-----------+
-                           | shared service
-                           v
-                +----------------------+
-                | FastAPI backend      |
-                | GET /health          |
-                | POST /query          |
-                +----------+-----------+
-                           |
-                           v
-                +----------------------+
-                | local NumPy/OpenCV   |
-                | no API or data fetch  |
-                +----------------------+
-```
+The original offline `satquery/` package (keyword router + HSV tools) is preserved for local demos and the Streamlit UI.
+
+---
 
 ## Repository layout
 
-```text
+```
 .
-├── satquery/
-│   ├── api.py          # FastAPI app and multipart endpoint
-│   ├── models.py       # Pydantic and domain response models
-│   ├── router.py       # router agent and injectable classifier
-│   ├── service.py      # uploaded-image decoding and application flow
-│   └── tools.py        # OpenCV specialist tools
+├── acquisition/               # STAC search, raster I/O, error types
+│   ├── stac.py                # Sentinel2Fetcher, Sentinel1RTCFetcher, AcquisitionPipeline
+│   ├── raster.py              # safe_read_raster (Rasterio + NaN sanitization)
+│   ├── clipping.py
+│   └── errors.py              # AcquisitionError, NoScenesError, AssetValidationError
+├── agent/                     # Deterministic orchestration layer
+│   ├── controller.py          # AnalysisController — full DAG execution
+│   ├── planner.py             # DAGPlanner — builds ExecutionPlan from scenes
+│   └── validator.py           # SceneValidator — CRS, extent, band checks
+├── backend/                   # FastAPI app and its own mirrored modules
+│   ├── api.py                 # /health · /analyze · /imagery/analyze (CORS enabled)
+│   ├── agent/controller.py    # backend-scoped controller (trace-backed)
+│   ├── models/contracts.py    # InputConfig, Asset, TraceStep, MonthlyResult, AnalysisResult
+│   └── tools/
+│       ├── change/index.py    # detect_change (SSIM + Otsu)
+│       └── geo/indices.py     # calculate_indices (NDVI, NDWI)
+├── models/
+│   └── schemas.py             # BBoxQuery, TraceStep, MonthlyResult, V2AnalysisResponse
+├── tools/                     # Pure analysis functions (no FastAPI dependency)
+│   ├── area.py                # calculate_geodesic_area
+│   ├── change.py              # detect_change (SSIM + Otsu thresholding)
+│   ├── indices.py             # compute_ndvi, compute_ndwi, calculate_indices
+│   └── registry.py            # ToolRegistry — explicit named-tool execution
+├── satquery/                  # Original offline v1 package (preserved)
+│   ├── api.py                 # POST /query (multipart images)
+│   ├── models.py              # Intent, AgentResponse, ToolResult, BoundingBox
+│   ├── router.py              # OrchestratorRouterAgent + KeywordIntentClassifier
+│   ├── service.py             # analyze_query — decodes bytes, calls router
+│   └── tools.py               # BiTemporalChangeDetectionTool, FeatureExtractionTool
 ├── frontend/
-│   ├── streamlit_app.py
-│   └── src/              # React + MapLibre SatQuery AI interface
+│   ├── streamlit_app.py       # Streamlit demo (calls satquery.service directly)
+│   └── src/
+│       ├── map/MapView.tsx    # Globe, bbox draw, search, prompt bar, analysis state
+│       ├── components/
+│       │   ├── AgentWarRoomModal.tsx   # Phase rail, agent cards, live terminal logs
+│       │   └── AnalysisReport.tsx     # Executive report, timeline, export buttons
+│       └── types.ts           # Shared TS interfaces
 ├── tests/
-│   ├── test_api.py
-│   ├── test_image_tools.py
-│   └── test_router.py
+│   └── test_backend.py        # Controller, tools, API integration tests
+├── docs/
+│   └── subagent-orchestration.md   # Full agent loop walkthrough
+├── demo/
+│   └── images/                # Deterministic test fixtures
 ├── Dockerfile
 ├── Makefile
 ├── requirements.txt
-└── .python-version
+└── .python-version            # Python 3.11
 ```
 
-## Requirements and offline behavior
+---
 
-- Python **3.11** is pinned in `.python-version`.
-- Direct dependencies are version-pinned in `requirements.txt`.
-- `langchain` is included as a pinned extension point, but the default router does not instantiate a hosted model or make an LLM call.
-- Tests use only programmatic NumPy arrays and local encoded PNGs.
-- No test performs DNS, HTTP, cloud SDK, or external LLM work.
-- Uploaded images are decoded from bytes with OpenCV; no user-specific absolute paths are required.
+## Satellite data sources
+
+| Source | Collection | Bands | Use case |
+|---|---|---|---|
+| Microsoft Planetary Computer | `sentinel-2-l2a` | B02 B03 B04 B08 | Optical RGB + NIR → NDVI / NDWI |
+| Microsoft Planetary Computer | `sentinel-1-rtc` | VV VH | SAR — cloud-penetrating radar, floods, damage |
+
+The pipeline automatically switches to SAR when optical cloud cover exceeds 60 % and `satellite` is set to `"auto"` (the default). You can force a specific sensor by setting `satellite` to `"sentinel-2"` or `"sentinel-1-rtc"` in the request body.
+
+No API key or account is required for Planetary Computer.
+
+---
 
 ## Local setup
 
-From the repository root:
+Python 3.11 is required.
 
 ```bash
+# install venv module if missing (Debian/Ubuntu)
+sudo apt install python3.11-venv
+
 python3.11 -m venv .venv
-.venv/bin/python -m pip install --upgrade pip
-.venv/bin/python -m pip install --no-cache-dir -r requirements.txt
+source .venv/bin/activate
+pip install --upgrade pip
+pip install --no-cache-dir -r requirements.txt
 ```
 
-Copy `.env.example` to `.env` only if you want to customize the optional local settings. The default application needs no secret or API key.
+Copy `.env.example` to `.env` if you want to customise optional settings. The application needs no secrets or API keys.
 
-If your Linux installation does not provide the `venv` module, install the distribution's Python 3.11 venv package before creating the environment. Do not install project dependencies globally.
+---
 
-## Test
+## Run
 
-The single project check is:
-
-```bash
-make test
-```
-
-`make test` runs `pytest -q` against the local suite. It is safe to run offline after dependencies have been installed. The suite covers:
-
-- mock dependency-injected intent classification and routing;
-- unknown and missing-image error paths;
-- OpenCV change percentages and bounding boxes;
-- water and vegetation coverage thresholds;
-- FastAPI health and multipart query behavior.
-
-## Run the backend
-
-With the virtual environment active:
+### Backend (v2 — real satellite data)
 
 ```bash
 source .venv/bin/activate
-make api
+python -m uvicorn backend.api:app --host 0.0.0.0 --port 8000
 ```
 
-The API listens on `http://localhost:8000`. Visit `http://localhost:8000/docs` for the local OpenAPI UI or check health:
+Health check:
 
 ```bash
 curl http://localhost:8000/health
+# {"status":"ok","mode":"v2-backend"}
 ```
 
-Expected response:
-
-```json
-{"status":"ok","mode":"offline"}
-```
-
-Submit a feature extraction request with one local image:
-
-```bash
-curl -X POST http://localhost:8000/query \
-  -F 'query_text=Highlight water bodies' \
-  -F 'image=@relative/path/to/scene.png'
-```
-
-Submit a change detection request with two local images:
-
-```bash
-curl -X POST http://localhost:8000/query \
-  -F 'query_text=What changed between these dates?' \
-  -F 'image_before=@relative/path/to/before.png' \
-  -F 'image_after=@relative/path/to/after.png'
-```
-
-## Run the Streamlit frontend
-
-The frontend calls the same local application service directly, which keeps the demo functional even when the API is not separately started:
-
-```bash
-source .venv/bin/activate
-make frontend
-```
-
-Open the printed local URL, enter one of the supported query styles, upload the corresponding image(s), and select **Run local analysis**. The UI shows the selected route, reason, summary, metrics, and bounding boxes.
-
-Supported examples:
-
-- `What changed between these dates?` → upload an earlier and later image.
-- `Compare the two satellite images` → upload an earlier and later image.
-- `Highlight water bodies` → upload one image.
-- `How much vegetation is visible?` → upload one image.
-
-### Included demo images
-
-Ready-to-upload deterministic fixtures are in `demo/images/`:
-
-- `change_before.png` and `change_after.png` for bi-temporal comparison;
-- `feature_scene.png` for water and vegetation extraction.
-
-See `demo/README.md` for expected queries and the regeneration command.
-
-## Docker
-
-The multi-stage Dockerfile installs the exact requirements into a builder virtual environment, copies that environment into a slim runtime image, and uses the offline test suite as its default entrypoint.
-
-Build and run the default test container:
-
-```bash
-docker build -t satquery-agent:local .
-docker run --rm satquery-agent:local
-```
-
-Run the API by overriding the default test entrypoint:
-
-```bash
-docker run --rm -p 8000:8000 satquery-agent:local \
-  python -m uvicorn satquery.api:app --host 0.0.0.0 --port 8000
-```
-
-Run the Streamlit demo instead:
-
-```bash
-docker run --rm -p 8501:8501 satquery-agent:local \
-  python -m streamlit run frontend/streamlit_app.py \
-  --server.address=0.0.0.0 --server.port=8501
-```
-
-The Docker build needs access to the package index the first time it creates the image. Once the image is built, the application and its tests do not make external service calls.
-
-## Response shape
-
-Every routed request returns a structured response. A successful feature request has the following shape:
-
-```json
-{
-  "status": "ok",
-  "query": "Highlight water bodies",
-  "intent": "feature_extraction",
-  "route": "feature_extraction",
-  "route_reason": "Feature or coverage language selected the extraction tool.",
-  "result": {
-    "tool": "feature_extraction",
-    "summary": "Water bodies cover 12.50% and vegetation covers 41.25% of the image.",
-    "metrics": {
-      "water_coverage_percentage": 12.5,
-      "vegetation_coverage_percentage": 41.25,
-      "water_pixels": 1250,
-      "vegetation_pixels": 4125
-    },
-    "bounding_boxes": [],
-    "details": {"width": 100, "height": 100, "color_space": "HSV"}
-  },
-  "error": null
-}
-```
-
-Validation failures are returned as a structured `status: "error"` agent response when the query is valid but an expected image is missing. Corrupt uploaded image bytes are rejected by the API with HTTP 422.
-
-## Rebuild checklist
-
-For a clean Linux rebuild:
-
-1. Clone or copy this repository.
-2. Confirm Python 3.11 and Docker are available.
-3. Create a project-local `.venv` and install `requirements.txt`.
-4. Run `make test`.
-5. Run `make api` or `make frontend`, or build the Docker image.
-
-No credentials, model downloads, satellite catalog, or external image service are required for the included Python demo and tests. The React map uses Nominatim and a public MapLibre demo style when those browser network features are available, and shows a recoverable offline state when they are not.
-
-## React SatQuery AI frontend
-
-The interactive MapLibre interface lives in `frontend/` alongside the existing Streamlit demo. It includes the globe-to-Mercator transition, Nominatim location search, analysis prompt context, land-cover metrics, and the Agent War Room modal.
+### React frontend
 
 ```bash
 cd frontend
@@ -263,9 +177,213 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:5173`. Run the production checks with:
+Open `http://localhost:5173`. Draw a bounding box on the globe, pick a date range, type a question, and press **Analyze**.
 
 ```bash
+# production checks
 npm run typecheck
 npm run build
 ```
+
+### v1 offline backend (keyword router + uploaded images)
+
+```bash
+source .venv/bin/activate
+make api        # uvicorn satquery.api:app --port 8000
+```
+
+### Streamlit demo (v1 offline)
+
+```bash
+source .venv/bin/activate
+make frontend   # streamlit run frontend/streamlit_app.py
+```
+
+---
+
+## API reference
+
+### v2 backend
+
+#### `GET /health`
+```json
+{"status": "ok", "mode": "v2-backend"}
+```
+
+#### `POST /analyze` and `POST /imagery/analyze`
+
+Both routes accept the same JSON body and return the same response. `/imagery/analyze` is a compatibility alias for the React frontend.
+
+**Request body:**
+```json
+{
+  "bbox": [73.7, 18.4, 73.9, 18.6],
+  "query": "What changed here over the last year?",
+  "start_date": "2024-01",
+  "end_date": "2024-12",
+  "satellite": "auto"
+}
+```
+
+`satellite` accepts `"auto"` (default), `"sentinel-2"`, or `"sentinel-1-rtc"`.  
+Dates accept `"YYYY-MM"` or `"YYYY-MM-DD"`.
+
+**Response shape:**
+```json
+{
+  "status": "ok",
+  "query": "What changed here over the last year?",
+  "bbox": [73.7, 18.4, 73.9, 18.6],
+  "confidence": 0.87,
+  "metrics": {
+    "area_hectares": 412.5,
+    "ndvi_mean": 0.38,
+    "ndvi_vegetation_percentage": 54.2,
+    "ndwi_water_percentage": 8.1,
+    "changed_area_percentage": 3.4,
+    "scene_count": 12.0
+  },
+  "months": [
+    {
+      "date": "2024-01",
+      "scene_id": "S2B_...",
+      "cloud_cover": 4.2,
+      "metrics": { "ndvi_mean": 0.35, "area_hectares": 412.5 },
+      "change_from_previous": null,
+      "summary": "Optical scene covers 412.50 hectares.",
+      "thumbnail_b64": "<base64 PNG>"
+    }
+  ],
+  "trace": [
+    {
+      "tool_name": "acquisition.fetch",
+      "duration_ms": 1842.3,
+      "output_summary": "fetched 12 scene(s)",
+      "status": "ok"
+    }
+  ],
+  "answer": "The validated analysis covers 412.50 hectares...",
+  "error": null
+}
+```
+
+### v1 offline backend
+
+#### `GET /health`
+```json
+{"status": "ok", "mode": "offline"}
+```
+
+#### `POST /query` (multipart form)
+
+```bash
+# feature extraction
+curl -X POST http://localhost:8000/query \
+  -F 'query_text=Highlight water bodies' \
+  -F 'image=@scene.png'
+
+# change detection
+curl -X POST http://localhost:8000/query \
+  -F 'query_text=What changed between these dates?' \
+  -F 'image_before=@before.png' \
+  -F 'image_after=@after.png'
+```
+
+---
+
+## Tests
+
+```bash
+make test
+# or
+source .venv/bin/activate
+python -m pytest -q
+```
+
+The suite covers:
+
+- controller returns real metrics and a complete trace
+- SAR assets are handled without array truthiness errors
+- NDVI mean and SSIM change detection produce correct values
+- API returns trace and metrics; validation rejects an invalid bbox
+
+Tests use in-process NumPy arrays and a `FakeAcquisition` stub. No DNS, HTTP, or external service calls are made.
+
+---
+
+## Docker
+
+```bash
+# build
+docker build -t satquery-agent:local .
+
+# run tests (default entrypoint)
+docker run --rm satquery-agent:local
+
+# run v2 backend
+docker run --rm -p 8000:8000 satquery-agent:local \
+  python -m uvicorn backend.api:app --host 0.0.0.0 --port 8000
+
+# run v1 offline API
+docker run --rm -p 8000:8000 satquery-agent:local \
+  python -m uvicorn satquery.api:app --host 0.0.0.0 --port 8000
+
+# run Streamlit demo
+docker run --rm -p 8501:8501 satquery-agent:local \
+  python -m streamlit run frontend/streamlit_app.py \
+  --server.address=0.0.0.0 --server.port=8501
+```
+
+---
+
+## Agent War Room
+
+The War Room modal (`AgentWarRoomModal.tsx`) visualises the live orchestration loop while an analysis runs:
+
+- **Phase rail** — Pending → Planning → Reviewing → Executing → Complete
+- **Agent cards** — Planner, Reviewer, and Executor fleet with retry badges
+- **Reviewer feedback** — shows why a plan was rejected and sent back to the Planner
+- **Terminal stream** — real `analysis_logs` from the backend trace, tagged `AGT / LOG / OUT / SYS`
+
+The modal opens automatically when a prompt is submitted and closes when the report is ready.
+
+---
+
+## AnalysisReport
+
+After synthesis the report panel shows:
+
+- executive summary (plain text, inline bold supported)
+- monthly thumbnail timeline — one row per scene with cloud, vegetation, and change bars
+- land-cover breakdown (vegetation, water, built-up)
+- key findings cards (area, NDVI, NDWI, change %)
+- recommended next steps
+- export buttons — PDF, GeoJSON, raw JSON, text snapshot
+- **Highlight on map** toggle — flies to the bbox center and adds a visual marker
+
+---
+
+## Offline / online boundaries
+
+| Component | Network required |
+|---|---|
+| v1 keyword router + OpenCV tools | No |
+| Streamlit demo | No |
+| v2 STAC acquisition (Planetary Computer) | Yes — for real imagery |
+| v2 SAR fallback (Sentinel-1 RTC) | Yes — for real imagery |
+| MapLibre basemap tiles | Yes — degrades gracefully |
+| Nominatim location search | Yes — degrades gracefully |
+| All analysis computation (NDVI, SSIM, area) | No — runs locally |
+| LLM calls | None — no external model is used |
+
+If Planetary Computer is unreachable the backend returns a structured `status: "error"` response. The War Room displays the failure instead of crashing the app.
+
+---
+
+## Planned improvements (Tier 2+)
+
+- Copernicus Data Space integration for Sentinel-1 SLC and Sentinel-3 thermal
+- NASA EarthData VIIRS night-time lights
+- Landsat 8/9 thermal infrared (Band 10)
+- Streaming SSE response so the War Room updates in real time during long fetches
+- Persistent scene cache to avoid re-downloading the same monthly tiles
