@@ -1,3 +1,3 @@
-"""Offline-first satellite image query assistant."""
+"""Compatibility namespace for the SatQuery AI v2 backend."""
 
-__version__ = "0.1.0"
+__version__ = "2.0.0"

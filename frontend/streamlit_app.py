@@ -1,60 +1,48 @@
-"""Streamlit demo for the local SatQuery-Agent service."""
+"""Small Streamlit client for the trace-backed SatQuery AI v2 controller."""
 
 from __future__ import annotations
 
 import streamlit as st
 
-from satquery.service import analyze_query
+from backend.agent.controller import AnalysisController
+from backend.models.contracts import InputConfig
 
 
-st.set_page_config(page_title="SatQuery-Agent", page_icon="🛰️", layout="wide")
-st.title("🛰️ SatQuery-Agent")
-st.caption("Offline-first, agentic satellite vision-language query assistant")
-
+st.set_page_config(page_title="SatQuery AI", page_icon="🛰️", layout="wide")
+st.title("🛰️ SatQuery AI")
+st.caption("Trace-backed satellite analysis with real STAC acquisition and local tools")
 st.info(
-    "The router and OpenCV specialists run in this process. No LLM API, cloud "
-    "credential, or network connection is needed."
+    "The v2 controller fetches Planetary Computer scenes, validates raster evidence, "
+    "runs deterministic tools, and returns the exact execution trace."
 )
 
-query = st.text_area(
-    "Ask a satellite-image question",
-    placeholder="What changed between these dates? or Highlight water bodies",
-)
+with st.form("analysis"):
+    query = st.text_input("Question", value="What changed between these dates?")
+    bbox_text = st.text_input("BBox [west, south, east, north]", value="73.84, 18.50, 73.88, 18.54")
+    start_date = st.text_input("Start date", value="2024-01")
+    end_date = st.text_input("End date", value="2024-03")
+    satellite = st.selectbox("Satellite", ["auto", "sentinel-2", "sentinel-1-rtc"])
+    submitted = st.form_submit_button("Run backend analysis", type="primary")
 
-left, right = st.columns(2)
-with left:
-    before = st.file_uploader(
-        "Earlier image (change detection)", type=["png", "jpg", "jpeg"], key="before"
-    )
-    image = st.file_uploader(
-        "Single image (water / vegetation extraction)",
-        type=["png", "jpg", "jpeg"],
-        key="single",
-    )
-with right:
-    after = st.file_uploader(
-        "Later image (change detection)", type=["png", "jpg", "jpeg"], key="after"
-    )
-
-if st.button("Run local analysis", type="primary"):
-    if not query.strip():
-        st.warning("Enter a question before running the agent.")
+if submitted:
+    try:
+        bbox = [float(value.strip()) for value in bbox_text.split(",")]
+        request = InputConfig(
+            bbox=bbox,
+            query=query,
+            start_date=start_date,
+            end_date=end_date,
+            satellite=satellite,
+        )
+        response = AnalysisController().analyze(request)
+    except (ValueError, TypeError) as exc:
+        st.error(str(exc))
     else:
-        try:
-            response = analyze_query(
-                query,
-                before_bytes=before.getvalue() if before else None,
-                after_bytes=after.getvalue() if after else None,
-                image_bytes=image.getvalue() if image else None,
-            )
-        except ValueError as exc:
-            st.error(str(exc))
+        if response.status == "ok":
+            st.success(response.answer)
         else:
-            st.subheader("Orchestrator response")
-            st.write(f"**Route:** `{response.route}`")
-            st.write(f"**Reason:** {response.route_reason}")
-            if response.status == "ok" and response.result:
-                st.success(response.result.summary)
-                st.json(response.result.model_dump())
-            else:
-                st.error(response.error or "The agent could not complete the request.")
+            st.error(response.error or "The backend could not complete the request.")
+        st.subheader("Exact metrics")
+        st.json(response.metrics)
+        st.subheader("Execution trace")
+        st.json([step.model_dump() for step in response.trace])

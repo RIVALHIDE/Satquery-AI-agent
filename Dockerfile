@@ -18,7 +18,7 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 COPY --from=builder /opt/venv /opt/venv
-COPY satquery ./satquery
+COPY backend ./backend
 COPY frontend ./frontend
 COPY tests ./tests
 COPY pyproject.toml Makefile .python-version ./

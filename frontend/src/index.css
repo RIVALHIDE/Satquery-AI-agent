@@ -57,6 +57,12 @@ input:focus-visible {
   color: #7dd3fc !important;
 }
 
+/* Keep navigation controls clear of the bottom-left projection pill. */
+.maplibregl-ctrl-bottom-left {
+  bottom: 80px !important;
+  left: 20px !important;
+}
+
 @keyframes pulse-ring {
   0%,
   100% {
@@ -65,6 +71,21 @@ input:focus-visible {
   50% {
     box-shadow: 0 0 0 7px rgba(45, 212, 191, 0);
   }
+}
+
+@keyframes report-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-report-enter {
+  animation: report-enter 420ms ease-out both;
 }
 
 .animate-pulse-ring {
