@@ -2,6 +2,18 @@
 
 https://youtu.be/7omqHjBwN2M?feature=shared
 
+<img width="1920" height="1080" alt="Screenshot from 2026-10-21 01-21-20" src="https://github.com/user-attachments/assets/2bd32deb-8108-4470-be58-cbf74c2ed180" />
+
+<img width="1920" height="1080" alt="Screenshot from 2026-10-21 01-21-42" src="https://github.com/user-attachments/assets/608a1699-cd81-4e0e-b3b3-5604ce99bf29" />
+
+<img width="1920" height="1080" alt="Screenshot from 2026-10-21 01-22-10" src="https://github.com/user-attachments/assets/e4200335-1d57-41d3-941e-fc938eecd2ca" />
+
+<img width="1920" height="1080" alt="Screenshot from 2026-10-21 01-22-51" src="https://github.com/user-attachments/assets/5376151e-edae-47ad-beca-9e625f866b7b" />
+
+
+
+
+
 Agentic satellite vision-language query assistant for ** Frontier Buildathon**.
 https://youtu.be/7omqHjBwN2M?feature=shared
 
