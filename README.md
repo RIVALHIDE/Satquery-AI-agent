@@ -1,5 +1,7 @@
 # SatQuery-Agent
 
+https://youtu.be/7omqHjBwN2M?feature=shared
+
 Offline-first, agentic satellite vision-language query assistant for **SIH26167 / Frontier Buildathon**.
 
 The project demonstrates a small local swarm of specialist agents/tools:
