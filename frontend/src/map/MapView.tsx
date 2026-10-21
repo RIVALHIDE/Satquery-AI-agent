@@ -60,7 +60,10 @@ const SELECTED_AREA_STROKE_LAYER_ID = "selected-area-stroke";
 const INITIAL_CENTER: [number, number] = [78.9629, 20.5937];
 const INITIAL_ZOOM = 1.8;
 const PROJECTION_THRESHOLD = 7;
-const ANALYSIS_TIMEOUT_MS = 60_000;
+// Real STAC analysis reads one scene per selected month. The default
+// 13-month request takes about 106 seconds locally, so keep a finite but
+// realistic client timeout instead of aborting a healthy backend run at 60s.
+const ANALYSIS_TIMEOUT_MS = 180_000;
 
 type ProjectionName = "globe" | "mercator";
 type DrawBbox = [number, number, number, number];
@@ -1021,7 +1024,12 @@ export default function MapView({
           detail: "Running the trace-backed v2 controller",
         },
       ],
-      logs: [],
+      logs: [{
+        id: 0,
+        tag: "SYS",
+        message: "Backend analysis started; querying STAC scenes and computing metrics.",
+        timestamp: formatTimestamp(),
+      }],
       isComplex: true,
     });
     setAgentToast("Backend Agents Analyzing… real STAC, validation, and tools are running");
