@@ -10,9 +10,13 @@ https://youtu.be/7omqHjBwN2M?feature=shared
 
 <img width="1920" height="1080" alt="Screenshot from 2026-10-21 01-22-51" src="https://github.com/user-attachments/assets/5376151e-edae-47ad-beca-9e625f866b7b" />
 
+<img width="1920" height="1080" alt="Screenshot from 2026-10-21 08-53-40" src="https://github.com/user-attachments/assets/87c0f0e1-9aa1-43c4-b629-cb0b030ec77a" />
 
+<img width="1920" height="1080" alt="Screenshot from 2026-10-21 08-53-47" src="https://github.com/user-attachments/assets/ec339fa5-82c9-4701-905a-d146bd95d5c1" />
 
+<img width="1920" height="1080" alt="Screenshot from 2026-10-21 08-53-55" src="https://github.com/user-attachments/assets/872d6b8d-1876-4a9e-b1cb-8a55661a2912" />
 
+<img width="1920" height="1080" alt="Screenshot from 2026-10-21 08-54-03" src="https://github.com/user-attachments/assets/ae10aadc-d5ac-4e80-ae71-4516a0ed1b93" />
 
 Agentic satellite vision-language query assistant for ** Frontier Buildathon**.
 https://youtu.be/7omqHjBwN2M?feature=shared
